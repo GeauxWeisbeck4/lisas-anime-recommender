@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
+
 export default function Home() {
   const [anime, setAnime] = useState('Death Note');
   const [response, setResponse] = useState(null);
