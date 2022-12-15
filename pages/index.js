@@ -1,59 +1,113 @@
-import Head from 'next/head';
-import styles from '../styles/Home.module.css';
-
+import { useState } from 'react';
+import axios from 'axios';
+import Image from 'next/image';
 export default function Home() {
+  const [anime, setAnime] = useState('Death Note');
+  const [response, setResponse] = useState(null);
+  const [btnText, setBtnText] = useState('Get Suggestions');
+  /**
+   *
+   *
+   * Fetch Anime Recommendations
+   */
+  const fetchAnimeSuggestions = async e => {
+    e.preventDefault();
+    try {
+      setBtnText('Getting Suggestions...');
+      const res = await axios.get(`/api/suggestion`, {
+        params: {
+          anime
+        }
+      });
+      if (res.data.data !== 'Anime Not Found') {
+        setResponse(res.data.data);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+    setBtnText('Get Suggestions');
+  };
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
+    <div className="flex flex-col items-center relative min-h-screen">
+      <h2 className="font-raleway font-bold text-6xl text-primary pt-20 pb-6 md:text-3xl">
+        <span className="text-secondary">Lisa's</span> Anime Recommender
+      </h2>
+      <h3 className="text-lightGrey text-2xl font-raleway font-bold uppercase tracking-wide mb-12 md:text-base md:px-4 md:text-center">
+        Tell Lisa what she wants to watch next
+      </h3>
+      <div className="flex flex-col justify-between items-center w-full md:items-center">
+        <form className="flex w-full justify-center md:flex-col md:w-5/6">
+          <input
+            type="text"
+            value={anime}
+            autoFocus={true}
+            className="border-none outline-none w-2/5 bg-primary px-4 py-2 rounded-sm font-raleway md:w-full"
+            placeholder="Enter anime name..."
+            onChange={e => setAnime(e.target.value)}
+          />
+          <button
+            className="outline-none border border-danger font-bold font-raleway ml-4 px-12 py-2 rounded-sm bg-danger text-primary transition duration-300 hover:bg-bc hover:text-black md:ml-0 md:mt-4"
+            onClick={fetchAnimeSuggestions}
+          >
+            {btnText}
+          </button>
+        </form>
+        {response &&
+          response.map(suggestion => {
+            const html = /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi;
+            const doubleSpace = /\s{2,}/g;
+            const description = suggestion.description
+              .replace(html, '')
+              .replace(doubleSpace, ' ')
+              .trim();
+            return (
+              <div
+                className="flex flex-col item-center my-12 w-3/6 h-4/5 md:flex-col md:w-4/6 md:h-full md:mb-12"
+                key={suggestion.id}
+              >
+                <div className="w-full mt-4 p-8 border border-secondary h-full text-lightGrey font-raleway">
+                  <Image
+                    src={suggestion.bannerImage}
+                    width={800}
+                    height={200}
+                  />
+                  <h2 className="text-xl font-bold my-4">
+                    {suggestion.title.english}
+                  </h2>
+                  <p className="text-sm leading-8">
+                    {description}
+                  </p>
+                  {suggestion.trailer && (
+                    <div className="mt-4">
+                      <h3 className="text-lg my-4 font-bold">
+                        Watch Trailer
+                      </h3>
+                      <iframe
+                        className="w-full h-96"
+                        src={`https://www.youtube.com/embed/${suggestion.trailer.id}`}
+                        title="YouTube video player"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+      </div>
+      <div className="flex flex-col justify-end h-36 md:h-24">
+        <p className="block mb-10 text-center text-secondary text-xs">
+          Made with love by Andrew —{' '}
+          <a
+            className="hover:text-primary"
+            href="https://github.com/RapidAPI/DevRel-Examples-External"
+          >
+            Love ya sweetie!
+          </a>
         </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a href="https://next.new" target="_blank" rel="noopener noreferrer">
-          Created with&nbsp;<b>next.new</b>&nbsp;⚡️
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }
